@@ -1,0 +1,352 @@
+---
+import Icon from 'astro-icon';
+import axios from 'axios';
+import {
+  programListApiKey,
+  area,
+  service,
+} from '../../constants/requestParameters';
+
+interface Props {
+  logoLurls: string[];
+  serviceNames: string[];
+  presentId: string[];
+  presentTitle: string[];
+  className?: string;
+}
+
+let { logoLurls } = Astro.props;
+const { serviceNames, presentId, presentTitle, className } = Astro.props;
+const itemDiameter = 100; // 半円に配置されるそれぞれの円の直径[rem]
+
+let programInfoList = {};
+let programLogos: string[] = [];
+try {
+  // Program Info API (Ver.2)
+  const responseProgramInfo = await axios.all(
+    Object.values(service).map(
+      async (serviceId, index) =>
+        await axios.get(
+          `https://api.nhk.or.jp/v2/pg/info/${area.東京}/${serviceId}/${presentId[index]}.json?key=${programListApiKey}`
+        )
+    )
+  );
+
+  responseProgramInfo.forEach((response) => {
+    programInfoList = {
+      ...programInfoList,
+      ...response.data.list,
+    };
+  });
+
+  programLogos = Object.keys(programInfoList).flatMap((key) =>
+    // @ts-ignore
+    programInfoList[key].map((obj: { program_logo: { url: string } }) =>
+      obj.program_logo && obj.program_logo.url ? obj.program_logo.url : ''
+    )
+  );
+
+  console.log('Program Info API(Ver.2)の取得に成功しました。');
+} catch (error) {
+  // ダミー画像が１枚だけなので、programLogosの長さは0 ダミー用のオブジェクトは用意しない
+}
+---
+
+<ul
+  data-ul-diameter
+  class=`grid aspect-square place-content-center pt-[1rem] ${className}`
+>
+  <li class="col-start-1 row-start-1">
+    <Icon
+      data-circle-scale
+      data-circle-color
+      name="ph:circle-thin"
+      class="text-[#FB0D06]"
+    />
+  </li>
+  <li class="col-start-1 row-start-1 mt-[-1rem] scale-150 text-main">
+    <Icon name="eva:tv-outline" class="pointer-events-none" />
+  </li>
+  <li
+    class="relative col-start-1 row-start-1 flex scale-110 items-center justify-center"
+  >
+    <img
+      data-programlogos={programLogos}
+      data-presenttitle={presentTitle}
+      class="max-[539px]:mt-[-0.7rem] max-[539px]:w-[4.8rem]"
+      src={`https:${programLogos[0]}`}
+      decoding="async"
+      loading="lazy"
+      width={itemDiameter * 0.67}
+      height={itemDiameter * 0.67}
+      alt={presentTitle[0]}
+      onerror={`this.onerror=null; this.src='/src/images/program-logo-dummy.webp';`}
+    />
+    <img
+      data-serviceLogoM
+      class="absolute bottom-[-0.7rem] left-[27%] max-[539px]:bottom-[-0.2rem] max-[539px]:left-[28%] max-[539px]:h-[1.6rem] max-[539px]:w-[3.2rem]"
+      src="/src/images/serviceLogoM/gtv-200x100.webp"
+      decoding="async"
+      loading="lazy"
+      width="46"
+      height="23"
+      alt={serviceNames[0]}
+    />
+  </li>
+  {
+    logoLurls.map((logoLurl, index) => (
+      <li data-transform data-logoLurl-js class="col-start-1 row-start-1">
+        <img
+          data-hover
+          data-test
+          src={`https:${logoLurl}`}
+          decoding="async"
+          loading="lazy"
+          width={`${itemDiameter / 2}`}
+          height={`${itemDiameter / 2}`}
+          class="w-[7.2rem] rounded-full border-[0.6rem] border-main duration-200 ease-linear hover:scale-110 hover:border-0 min-[540px]:w-[10rem] min-[540px]:border-[0.8rem]"
+          alt={serviceNames[index]}
+          onerror={`this.onerror=null; this.src='/src/images/serviceLogoL/${logoLurl
+            .replace('//www.nhk.or.jp/common/img/media/', '')
+            .replace(/\.png$/, '.webp')}';`}
+        />
+      </li>
+    ))
+  }
+</ul>
+
+<style lang="scss">
+  // ulDiameter: 円のwidth[rem](変更する場合、ブレイクポイントの数値も変更すること)
+  $breakpoint: 540px; // ulDiameter + 4rem(左右のページのスペースの2rem)
+  $logo-l-urls-length: 7; // logoLurls.length
+  $ul-diameter: 50; // ulDiameter
+  $item-diameter: 100; // itemDiameter
+
+  @for $index from 1 through ($logo-l-urls-length + 3) {
+    // 「3」は、liタグの最初からスタイルを適用しない要素
+    [data-transform]:nth-child(#{$index}) {
+      // $logo-l-urls-length: 7のとき、4から10まで代入
+      transform: rotate(($index * calc(360 / $logo-l-urls-length) - 295deg))
+        translate(30vw)
+        rotate(-($index * calc(360 / $logo-l-urls-length) - 295deg));
+
+      @media (min-width: $breakpoint) {
+        /* stylelint-disable length-zero-no-unit */
+        transform: rotate(($index * calc(360 / $logo-l-urls-length) - 295deg))
+          translate((calc($ul-diameter / 2) - calc($item-diameter / 20) + 0rem))
+          rotate(-($index * calc(360 / $logo-l-urls-length) - 295deg));
+        /* stylelint-enable length-zero-no-unit */
+      }
+    }
+  }
+
+  [data-ul-diameter] {
+    max-width: 39.8rem;
+
+    @media (min-width: $breakpoint) {
+      /* stylelint-disable-next-line length-zero-no-unit */
+      max-width: $ul-diameter + 0rem;
+    }
+  }
+
+  [data-circle-scale] {
+    $scale-values: (
+      $breakpoint - 1: 6,
+      $breakpoint - 21: 5.9,
+      $breakpoint - 41: 5.6,
+      $breakpoint - 61: 5.45,
+      $breakpoint - 81: 5.2,
+      $breakpoint - 101: 5,
+      $breakpoint - 121: 4.8,
+      $breakpoint - 141: 4.6,
+      $breakpoint - 161: 4.35,
+      $breakpoint - 181: 4.1,
+      $breakpoint - 201: 3.85
+    );
+
+    transform: scale(5.5);
+
+    @each $breakpoint, $scale in $scale-values {
+      @media (max-width: $breakpoint) {
+        transform: scale($scale);
+      }
+    }
+  }
+
+  // 初めての画面描写での、番組の最初の要素に適用
+  .js-logo-l-url-img-active-initial {
+    border: none;
+    transform: scale(1.1);
+  }
+
+  .js-logo-l-url-active-animation {
+    animation-name: center-move-out;
+    animation-duration: 0.8s; // ここの秒数を変える時、bodyタグのクリック無効化の時間も同じ時間へ変えること
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes center-move-out {
+    50% {
+      transform: translate(0);
+    }
+
+    100% {
+      pointer-events: none;
+    }
+  }
+
+  .js-logo-l-url-img-active-animation {
+    animation-name: active;
+    animation-duration: 0.8s; // ここの秒数を変える時、bodyタグのクリック無効化の時間も同じ時間へ変えること
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes active {
+    0% {
+      border: none;
+      transform: scale(1.1);
+    }
+
+    100% {
+      border: none;
+      transform: scale(1.1);
+    }
+  }
+
+  .pointer-events-none {
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { $programChangeIndex } from '../store/store'; // storeから$programChangeIndexをインポート
+
+  // 変数定義
+  // サービスカラー
+  const serviceColor: string[] = [
+    '#FB0D06', // g1
+    '#17A267', // e1
+    '#023CFF', // s1
+    '#850087', // s3
+    '#FB0D06', // r1
+    '#17A267', // r2
+    '#F29B09', // r3
+  ];
+
+  // サービス名
+  const serviceName: string[] = ['gtv', 'etv', 'bs1', 'bsp', 'r1', 'r2', 'fm'];
+  // デフォルトイメージのパス
+  const defaultImage: string = '/src/images/program-logo-dummy.webp';
+  // ポインターイベントがない状態を表すフラグ
+  let pointerEventsNone: number = 0;
+  // 初期状態を表すフラグ
+  let initial: boolean = true;
+
+  // DOM要素
+  const circleColor = document.querySelector('[data-circle-color]'); // circleの色を取得
+  const body: HTMLElement | null = document.querySelector('body'); // body要素を取得
+  const serviceLogoM = document.querySelector('[data-serviceLogoM]'); // サービスロゴの要素を取得
+  const programlogos = document.querySelector('[data-programlogos]'); // プログラムロゴの要素を取得
+
+  // li要素からロゴのイメージを取得
+  const initialNodeImg = document.querySelectorAll(
+    'li[data-logoLurl-js] > img'
+  );
+
+  // li要素を取得
+  const initialNode = document.querySelectorAll('li[data-logoLurl-js]');
+
+  const presenttitle = document.querySelector('[data-presenttitle]'); // 番組名を表示する要素を取得
+  let presentTitle: string[] = [];
+
+  // 番組名が存在すれば、配列に変換して格納
+  if (presenttitle) {
+    // @ts-ignore
+    presentTitle = presenttitle.dataset.presenttitle.split(','); // 文字列から配列に変換
+  }
+
+  // ロゴアニメーションを処理する関数
+  const handleLogoAnimation = (index: number) => {
+    initialNode[pointerEventsNone].classList.remove(
+      'js-logo-l-url-active-animation'
+    );
+    initialNodeImg[pointerEventsNone].classList.remove(
+      'js-logo-l-url-img-active-animation'
+    );
+    initialNode[index].classList.add('js-logo-l-url-active-animation');
+    initialNodeImg[index].classList.add('js-logo-l-url-img-active-animation');
+  };
+
+  // サービスロゴを設定する関数
+  const setServiceLogo = (index: number) => {
+    if (!serviceLogoM || !programlogos) return;
+    // 画像の読み込みに時間がかかっているので、少し速く表示
+    setTimeout(() => {
+      // @ts-ignore
+      let programlogosList = programlogos.dataset.programlogos.split(',');
+      // @ts-ignore
+      programlogos.src = !programlogosList[index]
+        ? defaultImage
+        : 'https:' + programlogosList[index];
+    }, 300);
+    setTimeout(() => {
+      // @ts-ignore
+      serviceLogoM.src = `/src/images/serviceLogoM/${serviceName[index]}-200x100.webp`;
+      // @ts-ignore
+      serviceLogoM.alt = serviceName[index];
+    }, 400);
+  };
+
+  // 番組名を設定する関数
+  const setPresentTitle = (index: number) => {
+    if (!presenttitle) return;
+    // @ts-ignore
+    presenttitle.alt = !presentTitle[index] ? '番組' : presentTitle[index];
+  };
+
+  // ポインターイベントをリセットする関数
+  const resetPointerEvents = () => {
+    if (!body) return;
+    setTimeout(() => {
+      body.style.pointerEvents = 'auto';
+    }, 800);
+  };
+
+  if (circleColor) {
+    initialNodeImg[0].classList.add('js-logo-l-url-img-active-initial');
+    initialNode[0].classList.add('pointer-events-none');
+
+    // 各li要素に対してクリックイベントを設定
+    initialNode.forEach((element, index) => {
+      const colorValue = serviceColor[index % serviceColor.length]; // 色を取得
+
+      element.addEventListener('click', () => {
+        $programChangeIndex.set(index); // クリックしたインデックスをセット
+        if (body) body.style.pointerEvents = 'none'; // bodyに対するポインターイベントを一時的に無効化
+
+        if (initial) {
+          // 初期状態であれば、アニメーションクラスとポインターイベント無効クラスを削除
+          initialNodeImg[0].classList.remove(
+            'js-logo-l-url-img-active-initial'
+          );
+          initialNode[0].classList.remove('pointer-events-none');
+          initial = false; // 初期状態フラグをfalseに更新
+        }
+
+        if (index !== pointerEventsNone) {
+          handleLogoAnimation(index); // ロゴのアニメーションを処理
+          // @ts-ignore
+          circleColor.style.transition = 'color 0.4s ease-in'; // カラーのトランジション設定
+          // @ts-ignore
+          circleColor.style.color = colorValue; // circleの色を設定
+          pointerEventsNone = index; // ポインターイベント無効フラグを更新
+          setServiceLogo(index); // サービスロゴを設定
+          setPresentTitle(index); // 番組名を設定
+          resetPointerEvents(); // ポインターイベントをリセット
+        }
+      });
+    });
+  }
+</script>

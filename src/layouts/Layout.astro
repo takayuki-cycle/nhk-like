@@ -1,0 +1,179 @@
+---
+import Head from '../components/Head.astro';
+
+const { head } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+  <Head head={head} />
+
+  <body
+    class="mx-auto max-w-[122rem] p-[2rem] font-custom text-rg font-rg text-darkgray"
+  >
+    <div id="cursor"></div>
+    <slot />
+    <style lang="scss" is:global>
+      html {
+        font-size: 62.5%; // 1rem = 10px
+        cursor: none;
+      }
+
+      #cursor {
+        pointer-events: none;
+        position: fixed;
+        top: -0.8rem; // 座標調節（カーソル位置と円の中心を合わせる）
+        left: -0.8rem; // 座標調節（カーソル位置と円の中心を合わせる）
+        width: 1.6rem; // カーソルの直径
+        height: 1.6rem; // カーソルの直径
+        background: rgb(128 128 128 / 100%);
+        border-radius: 50%;
+        z-index: 999;
+        transition: width 0.13s, height 0.13s, top 0.13s, left 0.13s;
+        mix-blend-mode: difference;
+      }
+
+      #cursor.hover-max {
+        top: -2rem; // 大きくなった分の座標調節
+        left: -2rem; // 大きくなった分の座標調節
+        width: 4rem; // カーソルの直径
+        height: 4rem; // カーソルの直径
+      }
+
+      #cursor.hover {
+        top: -1.6rem; // 大きくなった分の座標調節
+        left: -1.6rem; // 大きくなった分の座標調節
+        width: 3.2rem; // カーソルの直径
+        height: 3.2rem; // カーソルの直径
+      }
+
+      @font-face {
+        font-family: line-seed-jp;
+        src: url('/fonts/LINESeedJP_OTF_Th.woff2') format('woff2');
+        font-weight: 100; // font-thin
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: line-seed-jp;
+        src: url('/fonts/LINESeedJP_OTF_Rg.woff2') format('woff2');
+        font-weight: 300; // font-light
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: line-seed-jp;
+        src: url('/fonts/LINESeedJP_OTF_Bd.woff2') format('woff2');
+        font-weight: 600; // font-semibold
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: line-seed-jp;
+        src: url('/fonts/LINESeedJP_OTF_Eb.woff2') format('woff2');
+        font-weight: 800; // font-extrabold
+        font-style: normal;
+      }
+    </style>
+
+    <script>
+      // ----------------
+      // マウスカーソルを小さいドットに変更
+      // ----------------
+      // カーソル用のdivを取得
+      const cursor = document.getElementById('cursor');
+      const html = document.querySelector('html');
+      // cursorが存在する場合のみイベントリスナーを設定する
+      if (cursor) {
+        if (!('ontouchstart' in window)) {
+          // buttonタグのみcssでカーソルが非表示とならなかったので、jsで非表示
+          let buttons = document.querySelectorAll('button');
+          buttons.forEach((button) => {
+            button.style.cursor = 'none';
+          });
+          // ブラウザのストレージからカーソルの位置を取得
+          const storedCursorX = localStorage.getItem('cursorX');
+          const storedCursorY = localStorage.getItem('cursorY');
+          if (storedCursorX && storedCursorY) {
+            // ブラウザのストレージに位置情報が保存されている場合、それを反映
+            cursor.style.transform = `translate(${parseInt(
+              storedCursorX
+            )}px, ${parseInt(storedCursorY)}px)`;
+          }
+          // マウス移動イベントを設定
+          document.addEventListener('mousemove', (e) => {
+            // カーソルの位置をマウスの位置に設定する
+            const cursorX = e.clientX;
+            const cursorY = e.clientY;
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+            // カーソルの位置情報をブラウザのストレージに保存
+            localStorage.setItem('cursorX', cursorX.toString());
+            localStorage.setItem('cursorY', cursorY.toString());
+          });
+          // リンク要素を全て取得
+          const linkElems = document.querySelectorAll(
+            'a, button, [data-hover]'
+          );
+          // 各リンク要素に対して処理を行う
+          linkElems.forEach((linkElem) => {
+            // @ts-ignore
+            let hoverTimeout;
+            // マウスオーバー時にカーソルのスタイルを変更する
+            linkElem.addEventListener('mouseover', () => {
+              cursor.classList.add('hover-max');
+              // @ts-ignore
+              if (hoverTimeout) {
+                clearTimeout(hoverTimeout);
+              }
+              hoverTimeout = setTimeout(() => {
+                cursor.classList.add('hover');
+              }, 130);
+            });
+            // マウスアウト時にカーソルのスタイルを元に戻す
+            linkElem.addEventListener('mouseout', () => {
+              cursor.classList.remove('hover-max');
+              cursor.classList.remove('hover');
+              // @ts-ignore
+              if (hoverTimeout) {
+                clearTimeout(hoverTimeout);
+              }
+            });
+          });
+        } else {
+          cursor.style.background = 'transparent';
+          if (html) {
+            // タッチデバイスでマウスを使う場合、初期値のカーソルを表示
+            html.style.cursor = 'auto';
+          }
+        }
+      }
+
+      // ----------------
+      // typeShuffle
+      // ----------------
+      import { TypeShuffle } from '../scripts/typeShuffle';
+      const textElements = document.querySelectorAll('[data-type-shuffle]');
+
+      textElements.forEach((textElement) => {
+        const ts = new TypeShuffle(textElement);
+
+        // スクロールに応じて処理を実施
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.remove('invisible');
+              const maxCellIterations = parseInt(
+                entry.target.getAttribute('data-max-cell-iterations') || '5' // ５は初期値
+              );
+              ts.trigger('fx6', maxCellIterations);
+              observer.unobserve(entry.target);
+            }
+          });
+        });
+
+        // 初期表示時に実行
+        observer.observe(textElement);
+      });
+    </script>
+  </body>
+</html>

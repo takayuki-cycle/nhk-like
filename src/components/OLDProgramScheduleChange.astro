@@ -1,0 +1,157 @@
+---
+import Icon from 'astro-icon';
+import Image from './Image.astro';
+
+interface Props {
+  logoLurls: string[];
+  serviceNames: string[];
+  // media: 'tv' | 'radio';
+  isProgram: boolean; // true = Program, false = Schedule
+}
+
+let { logoLurls } = Astro.props;
+const { serviceNames, /* media, */ isProgram } = Astro.props;
+
+const scale = 600; // 半円のために確保するwidth[px]
+const diameterRatio = 0.8; // 半円の直径の倍率(1 = scale)
+// const tvLogoLurls: string[] = [];
+// const radioLogoLurls: string[] = [];
+const itemDiameter = 100; // 半円に配置されるそれぞれの円の直径[px]
+const itemMinusRadius = -itemDiameter / 20;
+
+// logoLurls.forEach((logoLurl) =>
+//   logoLurl.includes('r1-200x200') ||
+//   logoLurl.includes('r2-200x200') ||
+//   logoLurl.includes('fm-200x200')
+//     ? radioLogoLurls.push(logoLurl)
+//     : tvLogoLurls.push(logoLurl)
+// );
+// if (media === 'tv') {
+//   logoLurls = tvLogoLurls;
+// } else if (media === 'radio') {
+//   logoLurls = radioLogoLurls;
+// }
+
+//  transform: rotate( ${index * (360 / logoLurls.length) - 90}deg) translate(${scale / 25}rem) rotate(${index * -(360 / logoLurls.length) + 90}deg);
+---
+
+<div class="">
+  {
+    /* 半円のsvg
+  <div class="flex grow">
+    <svg
+      class={`${isProgram ? 'rotate-180' : '-rotate-90'}`}
+      width={scale}
+      viewBox={`-${scale} 0 ${scale * 2} ${scale}`}
+    >
+      <path
+        class={`stroke-main stroke-[2rem]`}
+        d={`M ${scale * diameterRatio} 0 A ${scale * diameterRatio} ${
+          scale * diameterRatio
+        } 0 0 1 -${scale * diameterRatio} 0`}
+        fill="none"></path>
+    </svg>
+  </div>
+  */
+  }
+  {
+    /*
+  overflow-hidden
+  height: ${scale / 20}rem;
+  */
+  }
+  <ul
+    class={`relative`}
+    style={`max-width: ${scale / 10}rem;
+          top: ${-scale / 20}rem;
+          height: ${scale / 20}rem;
+`}
+  >
+    {
+      logoLurls.map((logoUrl, index) => (
+        <li
+          class={`absolute`}
+          style={`top: ${itemMinusRadius + 0.5 + scale / 20}rem;
+                left: calc(50% - ${itemDiameter / 20}rem);`}
+        >
+          <img
+            id="hover"
+            src={`https:${logoUrl}`}
+            decoding="async"
+            loading="lazy"
+            width={itemDiameter}
+            height={itemDiameter}
+            class="rounded-full border-[0.8rem] border-main"
+            alt={serviceNames[index]}
+            onerror={`this.onerror=null; this.src='/src/images/serviceLogoL/${logoUrl
+              .replace('//www.nhk.or.jp/common/img/media/', '')
+              .replace(/\.png$/, '.webp')}';`}
+          />
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  /* 直下は計算式 */
+  /* transform: rotate( ${index * (360 / logoLurls.length) - 90}deg) translate(${scale / 25}rem) rotate(${index * -(360 / logoLurls.length) + 90}deg); */
+  /* 以下はlogoLurls.lengthが7、scaleが600のときで式を簡略化 */
+  /* transform: rotate( ${index * (51.4285714286) - 90}deg) translate(${scale / 25}rem) rotate(${index * -(51.4285714286) + 90}deg); */
+  li:nth-child(1) {
+    transform: rotate(-90deg) translate(24rem) rotate(90deg);
+  }
+  li:nth-child(2) {
+    transform: rotate(-38.5714285714deg) translate(24rem)
+      rotate(38.5714285714deg);
+  }
+  li:nth-child(3) {
+    transform: rotate(12.8571428572deg) translate(24rem)
+      rotate(-12.8571428572deg);
+  }
+  li:nth-child(4) {
+    transform: rotate(64.2857142858deg) translate(24rem)
+      rotate(-64.2857142858deg);
+  }
+  li:nth-child(5) {
+    transform: rotate(115.7142857144deg) translate(24rem)
+      rotate(-115.7142857144deg);
+  }
+  li:nth-child(6) {
+    transform: rotate(167.142857142deg) translate(24rem)
+      rotate(-167.142857142deg);
+  }
+  li:nth-child(7) {
+    transform: rotate(218.5714285696deg) translate(24rem)
+      rotate(-218.5714285696deg);
+  }
+  @media (max-width: 640px) {
+    li:nth-child(1) {
+      transform: rotate(-90deg) translate(37.5vw) rotate(90deg);
+    }
+    li:nth-child(2) {
+      transform: rotate(-38.5714285714deg) translate(37.5vw)
+        rotate(38.5714285714deg);
+    }
+    li:nth-child(3) {
+      transform: rotate(12.8571428572deg) translate(37.5vw)
+        rotate(-12.8571428572deg);
+    }
+    li:nth-child(4) {
+      transform: rotate(64.2857142858deg) translate(37.5vw)
+        rotate(-64.2857142858deg);
+    }
+    li:nth-child(5) {
+      transform: rotate(115.7142857144deg) translate(37.5vw)
+        rotate(-115.7142857144deg);
+    }
+    li:nth-child(6) {
+      transform: rotate(167.142857142deg) translate(37.5vw)
+        rotate(-167.142857142deg);
+    }
+    li:nth-child(7) {
+      transform: rotate(218.5714285696deg) translate(37.5vw)
+        rotate(-218.5714285696deg);
+    }
+  }
+</style>

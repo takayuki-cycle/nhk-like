@@ -1,0 +1,65 @@
+---
+// 使い方
+// <Image
+//   ext="webp"
+//   src={`${root}assets/images/about/img-test`}
+//   lazyload={true}
+//   alt="あいうえお"
+//   width={570}
+//   height={320}
+//   className="c-pic"
+//   ariaHidden={false}
+// />
+
+export interface Props {
+  src: string;
+  ext: 'webp' | 'svg';
+  alt: string;
+  className?: string;
+  width: number;
+  height: number;
+  lazyload: boolean;
+  ariaHidden: boolean;
+}
+
+const {
+  src,
+  ext = 'webp',
+  alt,
+  className = '',
+  width,
+  height,
+  lazyload = true,
+  ariaHidden = false,
+} = Astro.props;
+---
+
+{
+  lazyload ? (
+    <img
+      src={`${src}.${ext}`}
+      srcset={`${src}.${ext} ${width}w, ${src}@2x.${ext} ${width * 2}w`}
+      sizes={`100vw`}
+      decoding="async"
+      loading="lazy"
+      width={`${width}`}
+      height={`${height}`}
+      class={className}
+      alt={alt}
+      aria-hidden={ariaHidden}
+    />
+  ) : (
+    <img
+      src={`${src}.${ext}`}
+      srcset={`${src}.${ext} ${width}w, ${src}@2x.${ext} ${width * 2}w`}
+      sizes={`100vw`}
+      decoding="async"
+      width={`${width}`}
+      height={`${height}`}
+      class={className}
+      alt={alt}
+      aria-hidden={ariaHidden}
+    />
+    // 上記は、ユーザがページに初めて訪れたときに即座に表示されるべき画像のときに適用
+  )
+}

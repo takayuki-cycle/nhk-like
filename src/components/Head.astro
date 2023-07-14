@@ -1,0 +1,79 @@
+---
+interface Props {
+  head: {
+    title: string;
+    description: string;
+    author: string; // 複数は非推奨
+    canonical: string; // 現在のページの正規のURLを指定
+    robots: string;
+    ogType: 'website' | 'article' | 'video' | 'music.song' | 'book';
+    ogUrl: string;
+    image: string;
+    twitterSite: string;
+    twitterCreator: string; // 複数は非推奨
+  };
+}
+
+const { head } = Astro.props;
+
+const siteName = 'あいうえお';
+const themeColor = '#808080';
+---
+
+<head>
+  <!-- Required Information -->
+  <title>{head.title} | {siteName}</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={head.description} />
+  <meta name="author" content={head.author} />
+  <link rel="icon" href="/favicon.svg" type="image/x-icon" />
+  <link rel="canonical" href={head.canonical} />
+  <meta name="robots" content={head.robots} />
+
+  <!-- Open Graph Protocol -->
+  <meta property="og:title" content={head.title} />
+  <meta property="og:type" content={head.ogType} />
+  <meta property="og:url" content=`https://www.google.com/${head.ogUrl}` />
+  <meta
+    property="og:image"
+    content=`http://ia.media-imdb.com/images/${head.image}.jpg`
+  />
+  <meta property="og:site_name" content={siteName} />
+  <meta property="og:description" content={head.description} />
+  <meta property="og:locale" content="ja_JP" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content={head.twitterSite} />
+  <meta name="twitter:creator" content={head.twitterCreator} />
+  <meta name="twitter:title" content=`${head.title} | ${siteName}` />
+  <meta name="twitter:description" content={head.description} />
+  <meta
+    name="twitter:image"
+    content=`http://ia.media-imdb.com/images/${head.image}.jpg`
+  />
+
+  <!-- Other -->
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-TileColor" content={themeColor} />
+  <meta name="theme-color" content={themeColor} />
+
+  {
+    /* コメントの中身は作成途中です。
+  <link
+    rel="apple-touch-icon"
+    href="https://www.example.com/path/to/icon.png"
+  />
+
+  <!-- Webサイト所有者の認証 -->
+  <meta name="google-site-verification" content="your-google-code" />
+
+  <!-- PWA関連の要素 -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="App Title" />
+  */
+  }
+</head>

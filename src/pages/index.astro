@@ -1,0 +1,179 @@
+---
+import Layout from '../layouts/Layout.astro';
+import axios from 'axios';
+// import { programListDummy } from '../../constants/programListDummy';
+import { nowOnAirAllDummy } from '../../constants/nowOnAirDummy';
+import ProgramChange from '../components/ProgramChange.astro';
+import {
+  programListApiKey,
+  area,
+  service,
+} from '../../constants/requestParameters';
+import ChronologicalOrder from '../components/ChronologicalOrder.astro';
+
+const head = {
+  title: '放送史',
+  description: '放送史です。',
+  author: 'author',
+  canonical: 'canonical', // 現在のページの正規のURLを指定
+  robots: 'all',
+  ogType: 'website',
+  ogUrl: 'aaaaa',
+  image: 'image',
+  twitterSite: '@cycleWebFPGA',
+  twitterCreator: '@cycleWebFPGA',
+};
+
+// 現在の年月日を取得
+// let currentTime: Date = new Date();
+// let currentDate: string = [
+//   currentTime.getFullYear(),
+//   String(currentTime.getMonth() + 1).padStart(2, '0'),
+//   String(currentTime.getDate()).padStart(2, '0'),
+// ].join('-');
+
+// let programList;
+// try {
+//   // 放送地域、サービス（放送波）を指定することで、現在放送している番組情報を取得
+//   const response = await axios.get(
+//     `https://api.nhk.or.jp/v2/pg/list/130/g1/${currentDate}.json?key=${programListApiKey}`
+//   );
+//   programList = response.data;
+// } catch (error) {
+//   programList = programListDummy;
+// }
+
+let nowOnAirList = {};
+try {
+  // Now On Air API(Ver.2)
+  const responseNowOnAir = await axios.all(
+    Object.values(service).map(
+      async (serviceId) =>
+        await axios.get(
+          `https://api.nhk.or.jp/v2/pg/now/${area.東京}/${serviceId}.json?key=${programListApiKey}`
+        )
+    )
+  );
+  responseNowOnAir.forEach((response) => {
+    nowOnAirList = { ...nowOnAirList, ...response.data.nowonair_list };
+  });
+} catch (error) {
+  nowOnAirList = nowOnAirAllDummy;
+}
+const [logoLurls, serviceNames, presentId, presentTitle] = Object.values(
+  nowOnAirList
+).reduce(
+  (acc: [string[], string[], string[], string[]], obj: any) => {
+    acc[0].push(obj.present.service.logo_l.url);
+    acc[1].push(obj.present.service.name);
+    acc[2].push(obj.present.id);
+    acc[3].push(obj.present.title);
+    return acc;
+  },
+  [[], [], [], []] as [string[], string[], string[], string[]]
+);
+---
+
+<Layout head={head}>
+  <main class="">
+    {
+      /*
+      <Icon name="gg:shape-half-circle" class="w-10 text-success" />
+      <Icon name="mdi-light:arrow-right-circle" class="w-10 text-success" />
+      <Icon name="gala:tv" class="w-10 text-success" />
+      同じアイコンを何回も使うときはIconではなくSpriteを使うとリソースに少しやさしい。
+      Iconは都度SVGを描画するが、Spriteは一度描画したSVGを使いまわす。
+      
+      <Sprite.Provider>
+        <ul>
+          {items.map((item) => <MenuItem label={item.name} link={item.path} />)}
+          </ul>
+          </Sprite.Provider>
+          */
+    }
+    <section class="">
+      <div>
+        <h2
+          data-type-shuffle
+          data-max-cell-iterations="5"
+          class="mb-[1rem] text-xl font-eb"
+        >
+          Now On Air
+        </h2>
+        <h3
+          data-text-slide
+          data-presenttitle={presentTitle}
+          class="h-[7.2rem] w-full text-rg font-bd"
+        >
+          {presentTitle[0]}
+        </h3>
+      </div>
+      <ProgramChange
+        logoLurls={logoLurls}
+        serviceNames={serviceNames}
+        presentId={presentId}
+        presentTitle={presentTitle}
+        className={''}
+      />
+    </section>
+  </main>
+  <aside class="mb-[20rem]"><ChronologicalOrder /></aside>
+</Layout>
+
+<style lang="scss">
+  .text-slide {
+    width: max-content;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    background-image: linear-gradient(
+      90deg,
+      rgb(51 51 51 / 100%) 0%,
+      rgb(51 51 51 / 100%) 50%,
+      rgb(255 255 255 / 100%) 50%,
+      rgb(255 255 255 / 100%) 100%
+    );
+    background-size: 1% 100%;
+    animation: textslide 0.6s forwards ease-in;
+  }
+
+  @keyframes textslide {
+    0% {
+      background-size: 1% 100%;
+    }
+
+    100% {
+      background-size: 200% 100%;
+    }
+  }
+</style>
+
+<script>
+  import { $programChangeIndex } from '../store/store';
+
+  const presenttitle = document.querySelector('[data-presenttitle]'); // 番組名を表示する要素を取得
+  let presentTitle: string[] = [];
+
+  // 番組名が存在すれば、配列に変換して格納
+  if (presenttitle) {
+    // @ts-ignore
+    presentTitle = presenttitle.dataset.presenttitle.split(','); // 文字列から配列に変換
+  }
+
+  // ProgramChangeコンポーネントで、他の番組がクリックされたときに中身を実行
+  $programChangeIndex.subscribe((index) => {
+    const textslides = document.querySelectorAll('[data-text-slide]');
+    textslides.forEach((textslide) => {
+      textslide.classList.add('text-slide');
+    });
+    if (presenttitle) {
+      setTimeout(() => {
+        // ProgramChangeコンポーネントで、クリックされた現在の番組名を変更
+        presenttitle.textContent = presentTitle[index];
+        textslides.forEach((textslide) => {
+          textslide.classList.remove('text-slide');
+        });
+      }, 800);
+    }
+  });
+</script>
