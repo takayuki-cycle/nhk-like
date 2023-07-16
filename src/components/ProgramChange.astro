@@ -80,12 +80,12 @@ try {
       width={itemDiameter * 0.67}
       height={itemDiameter * 0.67}
       alt={presentTitle[0]}
-      onerror={`this.onerror=null; this.src='/src/images/program-logo-dummy.webp';`}
+      onerror={`this.onerror=null; this.src='/images/program-logo-dummy.webp';`}
     />
     <img
       data-serviceLogoM
       class="absolute bottom-[-0.7rem] left-[27%] max-[539px]:bottom-[-0.2rem] max-[539px]:left-[28%] max-[539px]:h-[1.6rem] max-[539px]:w-[3.2rem]"
-      src="/src/images/serviceLogoM/gtv-200x100.webp"
+      src="/images/serviceLogoM/gtv-200x100.webp"
       decoding="async"
       loading="lazy"
       width="46"
@@ -106,7 +106,7 @@ try {
           height={`${itemDiameter / 2}`}
           class="w-[7.2rem] rounded-full border-[0.6rem] border-main duration-200 ease-linear hover:scale-110 hover:border-0 min-[540px]:w-[10rem] min-[540px]:border-[0.8rem]"
           alt={serviceNames[index]}
-          onerror={`this.onerror=null; this.src='/src/images/serviceLogoL/${logoLurl
+          onerror={`this.onerror=null; this.src='/images/serviceLogoL/${logoLurl
             .replace('//www.nhk.or.jp/common/img/media/', '')
             .replace(/\.png$/, '.webp')}';`}
         />
@@ -238,7 +238,7 @@ try {
   // サービス名
   const serviceName: string[] = ['gtv', 'etv', 'bs1', 'bsp', 'r1', 'r2', 'fm'];
   // デフォルトイメージのパス
-  const defaultImage: string = '/src/images/program-logo-dummy.webp';
+  const defaultImage: string = '/images/program-logo-dummy.webp';
   // ポインターイベントがない状態を表すフラグ
   let pointerEventsNone: number = 0;
   // 初期状態を表すフラグ
@@ -293,7 +293,7 @@ try {
     }, 300);
     setTimeout(() => {
       // @ts-ignore
-      serviceLogoM.src = `/src/images/serviceLogoM/${serviceName[index]}-200x100.webp`;
+      serviceLogoM.src = `/images/serviceLogoM/${serviceName[index]}-200x100.webp`;
       // @ts-ignore
       serviceLogoM.alt = serviceName[index];
     }, 400);
